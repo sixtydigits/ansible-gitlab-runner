@@ -8,11 +8,14 @@
   when: gitlab_runner_skip_package_repo_install is not defined or not gitlab_runner_skip_package_repo_install
 
 - name: (Debian) Install Gitlab repository
-  command: bash /tmp/gitlab-runner.script.deb.sh
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: umask a+r && /bin/bash /tmp/gitlab-runner.script.deb.sh
+  register: output
+  when: gitlab_runner_skip_package_repo_install is not defined or not gitlab_runner_skip_package_repo_install
   args:
     creates: "/etc/apt/sources.list.d/runner_{{ gitlab_runner_package_name }}.list"
   become: true
-  when: gitlab_runner_skip_package_repo_install is not defined or not gitlab_runner_skip_package_repo_install
 
 - name: (Debian) Update gitlab_runner_package_name
   set_fact:
