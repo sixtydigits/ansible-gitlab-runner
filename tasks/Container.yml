@@ -8,14 +8,12 @@
     name: "{{ gitlab_runner_container_name }}-list"
     image: "{{ gitlab_runner_container_image }}:{{ gitlab_runner_container_tag }}"
     command: list
-    mounts:
-      - type: bind
-        source: "{{ gitlab_runner_container_mount_path }}"
-        target: /etc/gitlab-runner
+    mounts: "{{ gitlab_runner_container_mounts }}"
     cleanup: yes
     interactive: yes
     tty: yes
     detach: no
+    network_mode: "{{ gitlab_runner_container_network }}"
   register: configured_runners
   changed_when: False
   check_mode: no
@@ -25,14 +23,12 @@
     name: "{{ gitlab_runner_container_name }}-check"
     image: "{{ gitlab_runner_container_image }}:{{ gitlab_runner_container_tag }}"
     command: verify
-    mounts:
-      - type: bind
-        source: "{{ gitlab_runner_container_mount_path }}"
-        target: /etc/gitlab-runner
+    mounts: "{{ gitlab_runner_container_mounts }}"
     cleanup: yes
     interactive: yes
     tty: yes
     detach: no
+    network_mode: "{{ gitlab_runner_container_network }}"
   register: verified_runners
   ignore_errors: True
   changed_when: False
@@ -65,11 +61,6 @@
     name: "{{ gitlab_runner_container_name }}"
     image: "{{ gitlab_runner_container_image }}:{{ gitlab_runner_container_tag }}"
     restart_policy: "{{ gitlab_runner_container_restart_policy }}"
-    mounts:
-    - type: bind
-      source: "{{ gitlab_runner_container_mount_path }}"
-      target: /etc/gitlab-runner
-    - type: bind
-      source: /var/run/docker.sock
-      target: /var/run/docker.sock
+    mounts: "{{ gitlab_runner_container_mounts + gitlab_runner_container_mounts_extra}}"
     network_mode: "{{ gitlab_runner_container_network }}"
+    restart: true

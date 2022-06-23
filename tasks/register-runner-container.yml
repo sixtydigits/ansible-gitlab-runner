@@ -18,7 +18,7 @@
   docker_container:
     name: "{{ gitlab_runner_container_name }}"
     image: "{{ gitlab_runner_container_image }}:{{ gitlab_runner_container_tag }}"
-    command: |
+    command: >
       register
       --non-interactive
       --url '{{ gitlab_runner.url | default(gitlab_runner_coordinator_url) }}'
@@ -116,10 +116,7 @@
       {% if gitlab_runner.extra_registration_option is defined %}
       {{ gitlab_runner.extra_registration_option }}
       {% endif %}
-    mounts:
-    - type: bind
-      source: "{{ gitlab_runner_container_mount_path }}"
-      target: /etc/gitlab-runner
+    mounts: "{{ gitlab_runner_container_mounts }}"
     cleanup: yes
     auto_remove: yes
     network_mode: "{{ gitlab_runner_container_network }}"

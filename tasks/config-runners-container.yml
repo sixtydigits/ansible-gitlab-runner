@@ -31,8 +31,10 @@
     dest: "{{ gitlab_runner_config_file }}"
     delimiter: '[[runners]]\n'
     backup: yes
-    validate: |
-      docker run -i --rm -v %s:/gitlab-runner.conf
+    validate: >
+      docker run -i --rm 
+      --network {{ gitlab_runner_container_network }} 
+      -v %s:/gitlab-runner.conf
       {{ gitlab_runner_container_image }}:{{ gitlab_runner_container_tag }}
       verify -c /gitlab-runner.conf
     mode: 0600
