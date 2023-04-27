@@ -1,4 +1,8 @@
 ---
+- name: (Debian) Refresh package cache
+  ansible.builtin.apt:
+    cache_valid_time: 3600
+  when: gitlab_runner_skip_package_repo_install is not defined or not gitlab_runner_skip_package_repo_install
 
 - name: (Debian) Get Gitlab repository installation script
   get_url:
@@ -29,27 +33,41 @@
     gitlab_runner_package_state: "latest"
   when: gitlab_runner_package_version is not defined
 
-- name: (Debian) Install GitLab Runner
-  apt:
-    name: "{{ gitlab_runner_package }}"
-    state: "{{ gitlab_runner_package_state }}"
-  become: true
-  environment:
-    GITLAB_RUNNER_DISABLE_SKEL: "true"
-  when: ansible_distribution_release in ["buster", "focal"]
+- name: (Debian) Unhold GitLab Runner version
+  changed_when: false
+  dpkg_selections:
+    name: "{{ gitlab_runner_package_name }}"
+    selection: install
 
 - name: (Debian) Install GitLab Runner
   apt:
     name: "{{ gitlab_runner_package }}"
     state: "{{ gitlab_runner_package_state }}"
+    allow_downgrade: true
   become: true
-  when: ansible_distribution_release not in ["buster", "focal"]
+  environment:
+    GITLAB_RUNNER_DISABLE_SKEL: "true"
+  when: ansible_distribution_release in ["buster", "focal", "jammy"]
+
+- name: (Debian) Install GitLab Runner
+  apt:
+    name: "{{ gitlab_runner_package }}"
+    state: "{{ gitlab_runner_package_state }}"
+    allow_downgrade: true
+  become: true
+  when: ansible_distribution_release not in ["buster", "focal", "jammy"]
+
+- name: (Debian) Hold GitLab Runner version
+  dpkg_selections:
+    name: "{{ gitlab_runner_package_name }}"
+    selection: hold
+  when: gitlab_runner_package_version is defined
 
 - name: (Debian) Remove ~/gitlab-runner/.bash_logout on debian buster and ubuntu focal
   file:
     path: /home/gitlab-runner/.bash_logout
     state: absent
-  when: ansible_distribution_release in ["buster", "focal"]
+  when: ansible_distribution_release in ["buster", "focal", "jammy"]
 
 - name: Set systemd reload options
   import_tasks: systemd-reload.yml
